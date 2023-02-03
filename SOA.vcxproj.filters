@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{4e8e4063-87a5-4ff4-b410-dc0bb688a3ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{c033edad-eabc-4587-bc85-56362b5fe065}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\soa">
+      <UniqueIdentifier>{fe0edc30-ef6c-4949-aa96-4e0743385698}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\soa\soa.h">
+      <Filter>include\soa</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

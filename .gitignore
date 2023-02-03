@@ -28,5 +28,14 @@
 
 # Executables
 *.exe
+
+# VS
 *.out
 *.app
+*.user
+*.recipe
+*.ilk
+*.log
+*.pdb
+x64/
+.vs/

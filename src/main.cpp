@@ -1,0 +1,290 @@
+#define _ENABLE_EXTENDED_ALIGNED_STORAGE
+
+#include "soa/soa.h"
+
+#include <string>
+#include <algorithm>
+#include <assert.h>
+
+struct vector3
+{
+    float x, y, z;
+};
+
+inline bool operator==(const vector3& _lhs, const vector3& _rhs)
+{
+	return _lhs.x == _rhs.x && _lhs.y == _rhs.y && _lhs.z == _rhs.z;
+}
+
+struct Checker
+{
+    Checker() : defaultCtor{ true } {}
+    Checker(const Checker&) : copyCtor{ true } {}
+    Checker(Checker&&) : moveCtor{ true } {}
+
+    Checker& operator=(const Checker&)
+    {
+        copyAssign = true;
+        return *this;
+    }
+
+    Checker& operator=(Checker&&)
+    {
+        moveAssign = true;
+        return *this;
+    }
+
+    bool defaultCtor{ false };
+    bool copyCtor{ false };
+    bool moveCtor{ false };
+    bool copyAssign{ false };
+    bool moveAssign{ false };
+};
+
+inline bool operator==(const Checker& _lhs, const Checker& _rhs)
+{
+    return &_lhs == &_rhs;
+}
+
+// To declare a structure of arrays,
+// you need strongly typed indices to access your members in the structure of arrays
+enum class Example
+{
+    Position,
+    NumItems,
+    Life,
+    Name,
+    Checker,
+    Count // The Count item is mandatory to validate the number of members vs. the number of types
+};
+
+// You create your structure of arrays, given your members description enum
+// and the list of members types, that must match your enum
+using ExampleArray = soa::vector_std_alloc<Example, vector3, int, float, std::string, Checker>;
+
+// You can also create one with a custom allocator.
+class CustomAllocator
+{
+    char* m_buffer;
+public:
+    CustomAllocator(char* _buffer)
+        : m_buffer(_buffer)
+    {
+
+    }
+
+    template<typename T>
+    T* allocate(size_t _count)
+    {
+        return reinterpret_cast<T*>(m_buffer);
+    }
+
+    template<typename T>
+    void free(T* _ptr)
+    {
+
+    }
+};
+using ExampleCustomAllocator = soa::vector<Example, CustomAllocator, vector3, int, float, std::string, Checker>;
+
+#if 0
+template<size_t Size, typename... Types>
+class StaticAllocator
+{
+    template<typename T, size_t Count>
+    struct StaticBuffer
+    {
+        alignas(T) unsigned char data[sizeof(T) * Count];
+        bool allocated{ false };
+    };
+    
+	std::tuple<StaticBuffer<Types, Size>>...> m_arrays;
+
+    std::array<StaticBuffer<size_t, 8>, sizeof...(Types)> m_proxys;
+    size_t m_freeProxy{ 0 };
+
+    template<typename T, typename... Types>
+    std::pair<bool&, void*> getBuffer()
+    {
+        if constexpr ((std::is_same<Types, T>::value || ...))
+        {
+            auto& typedBuffer = std::get<StaticBuffer<T, Size>>(m_arrays);
+            return { typedBuffer.allocated, typedBuffer.data };
+        }
+        else
+        {
+            auto& freeProxy = m_proxys[m_freeProxy];
+            return { freeProxy.allocated, m_otherStuff.data };
+        }
+    }
+
+public:
+	template<typename T>
+	T* allocate(size_t _count)
+	{
+        using TypedArray = T[Size];
+		auto array = getBuffer<T, Types...>();
+		assert(array.first == false);
+		array.first = true;
+		return reinterpret_cast<T*>(array.second);
+	}
+
+	template<typename T>
+	void free(T* _ptr)
+	{
+		auto array = getBuffer<T, Types...>();
+		assert(array.first == true);
+		assert(array.second == _ptr);
+		array.first = false;
+	}
+};
+
+template<size_t Size>
+using InplaceExampleAllocator = StaticAllocator<Size, vector3, int, float, std::string>;
+
+template<size_t Size>
+using InplaceSao = soa::vector<Example, InplaceExampleAllocator<Size>, vector3, int, float, std::string>;
+#endif
+
+int main()
+{
+    // Create an empty SOA
+    ExampleArray test;
+    //InplaceSao<100> testStatic;
+
+    char bigBuffer[1024];
+    ExampleCustomAllocator testCustom{ CustomAllocator{ bigBuffer } };
+
+    // Interface is similar to std::vector
+    size_t size = test.size();
+    assert(size == 0);
+
+    bool empty = test.empty();
+    assert(empty);
+
+    // All operations will apply to all the vectors
+    test.reserve(10);
+    size_t capacity = test.capacity();
+    assert(capacity == 10);
+
+    // You can push_back a new element, consisting into a list of values matching your members list
+    test.push_back(vector3{ 1.f, 2.f, 3.f }, 4, 5.f, std::string{ "test name" }, Checker{});
+    assert(test.size() == 1);
+
+    // And then access the member of an element of the array, from the enum value and array index
+    const vector3& pos = std::as_const(test).at<Example::Position>(0);
+    assert(pos.x == 1.f && pos.y == 2.f && pos.z == 3.f);
+
+    int numItems = test.at<Example::NumItems>(0);
+    assert(numItems == 4);
+
+    float life = test.at<Example::Life>(0);
+    assert(life == 5.f);
+
+    const std::string& name = test.at<Example::Name>(0);
+    assert(name == "test name");
+
+    const Checker& checker = test.at<Example::Checker>(0);
+    assert(checker.moveCtor);
+
+    // You can get a tuple with copies of all members of a given array index
+    ExampleArray::value_list values = test.value_at(0);
+    std::get<static_cast<size_t>(Example::Position)>(values).x = 8.f;
+    assert(std::get<static_cast<size_t>(Example::Checker)>(values).copyCtor);
+
+    // Or a tuple of references
+    ExampleArray::reference_list refs = test.ref_at(0);
+    assert(refs == test.front());
+    std::get<static_cast<size_t>(Example::Position)>(refs).x = 8.f;
+
+    // Or a tuple of const references
+    ExampleArray::const_reference_list constRefs = std::as_const(test).back();
+
+    // You can also push a tuple with values
+    test.push_back(values);
+    assert(test.at<Example::Checker>(test.size() - 1).copyCtor);
+
+    // Or references
+    test.push_back(refs);
+    assert(test.at<Example::Checker>(test.size() - 1).copyCtor);
+
+    // Or const references
+    test.push_back(constRefs);
+    assert(test.at<Example::Checker>(test.size() - 1).copyCtor);
+
+    // And the same for insertion
+    test.insert(test.size(), values);
+    test.insert(test.size(), refs);
+    test.insert(test.size(), constRefs);
+
+    // Resize is supported
+    test.resize(3);
+    assert(test.size() == 3);
+
+    // As well as erase, based on indices
+    size_t newIndex = test.erase(0);
+    assert(newIndex == 0);
+    assert(test.size() == 2);
+
+    // Also with default value, from a list of default values for each member
+    test.resize(4, vector3{ 6.f, 7.f, 8.f }, 9, 10.f, "other name", Checker{});
+    assert(test.at<Example::Checker>(test.size() - 1).copyCtor);
+
+    // Or with a tuple of default values
+    test.resize(5, values);
+    assert(test.at<Example::Checker>(test.size() - 1).copyCtor);
+
+    test.pop_back();
+    assert(test.size() == 4);
+
+    // Insertion is only done from an index and not an iterator to simplify implementation
+    test.insert(0, vector3{ 11.f, 12.f, 13.f }, 14, 15.f, "first name", Checker{});
+    assert(test.at<Example::Checker>(0).moveCtor);
+
+    // But there are iterators of the full structure
+	{
+        ExampleArray::iterator it = test.begin();
+		auto end = test.end();
+        assert(it != end);
+	}
+
+    // And also partial iterators, working on a subset of members, to iterate only on the members you need
+    ExampleArray::partial_iterator<Example::Position, Example::Name> it = test.begin<Example::Position, Example::Name>();
+    auto end = test.end<Example::Position, Example::Name>();
+
+    for (; it != end; ++it)
+    {
+        // When dereferencing an iterator, you get a tuple of the members you selected.
+        ExampleArray::partial_ref_list<Example::Position, Example::Name> refIt = *it;
+
+        // ReferenceList is a tuple, so can be accessed like a regular tuple.
+        std::get<vector3&>(refIt).x = 1.f;
+
+        // Beware that the tuple indices are specific to that tuple, and you can't use the members description enum values.
+        std::get<1>(refIt) = "new value";
+
+        // But there are helper methods allowing to reuse the MembersDesc enum values and map to the correct tuple element.
+        vector3& pos = it.value<Example::Position>();
+        std::string& name = it.value<Example::Name>();
+    }
+
+    ExampleArray::partial_iterator<Example::Position, Example::Name> findItem = std::find_if(
+        test.begin<Example::Position, Example::Name>(),
+        test.end<Example::Position, Example::Name>(),
+        [](const ExampleArray::partial_ref_list<Example::Position, Example::Name>& _element) {
+            // Same remark here, the tuple elements are for the partial_ref_list, so you need to use appropriate parameter
+            return !std::get<std::string&>(_element).empty();
+        });
+
+    // And... we are done!
+    test.clear();
+    assert(test.empty());
+
+	{
+        test.shrink_to_fit();
+		ExampleArray::const_iterator it = test.cbegin();
+        assert(it == test.cend());
+	}
+
+    return 0;
+}
