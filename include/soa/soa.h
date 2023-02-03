@@ -46,8 +46,6 @@ namespace soa
 
 #endif
 
-
-
 namespace soa
 {
     template <typename MembersDesc, typename Allocator, typename... Types>
@@ -70,137 +68,137 @@ namespace soa
     public:
         class iterator
         {
-		public:
+        public:
             using pointer_list = tuple<Types*...>;
             using difference_type = ptrdiff_t;
 
             iterator() = default;
 
             reference_list operator*() const
-			{
-				return apply([](auto... _obj) { return reference_list{ *(_obj)...}; }, m_ptr);
-			}
+            {
+                return apply([](auto... _obj) { return reference_list{ *(_obj)... }; }, m_ptr);
+            }
 
-			template<MembersDesc MemberIndex>
-			auto& value()
-			{
-				return *get<MemberIndex>(m_ptr);
-			}
+            template<MembersDesc MemberIndex>
+            auto& value()
+            {
+                return *get<MemberIndex>(m_ptr);
+            }
 
-			iterator& operator++()
-			{
-				apply([](auto*&... _obj) { (++_obj, ...); }, m_ptr);
-				return *this;
-			}
+            iterator& operator++()
+            {
+                apply([](auto*&... _obj) { (++_obj, ...); }, m_ptr);
+                return *this;
+            }
 
-			iterator operator++(int)
-			{
-				iterator ret = *this;
-				apply([](auto*&... _obj) { (_obj++, ...); }, m_ptr);
-				return ret;
-			}
+            iterator operator++(int)
+            {
+                iterator ret = *this;
+                apply([](auto*&... _obj) { (_obj++, ...); }, m_ptr);
+                return ret;
+            }
 
-			iterator& operator--()
-			{
-				apply([](auto*&... _obj) { (--_obj, ...); }, m_ptr);
-				return *this;
-			}
+            iterator& operator--()
+            {
+                apply([](auto*&... _obj) { (--_obj, ...); }, m_ptr);
+                return *this;
+            }
 
-			iterator operator--(int)
-			{
-				iterator ret = *this;
-				apply([](auto*&... _obj) { (_obj--, ...); }, m_ptr);
-				return ret;
-			}
+            iterator operator--(int)
+            {
+                iterator ret = *this;
+                apply([](auto*&... _obj) { (_obj--, ...); }, m_ptr);
+                return ret;
+            }
 
             difference_type operator-(const iterator& _other) const
             {
                 return get<0>(m_ptr) - get<0>(_other.m_ptr);
             }
 
-			bool operator==(const iterator& _other) const
-			{
-				return m_ptr == _other.m_ptr;
-			}
+            bool operator==(const iterator& _other) const
+            {
+                return m_ptr == _other.m_ptr;
+            }
 
-			bool operator!=(const iterator& _other) const
-			{
-				return m_ptr != _other.m_ptr;
-			}
+            bool operator!=(const iterator& _other) const
+            {
+                return m_ptr != _other.m_ptr;
+            }
 
         private:
-			pointer_list m_ptr{};
+            pointer_list m_ptr{};
 
-			template<typename... Args>
-			iterator(Args... _args)
-				: m_ptr{ make_tuple(_args...) }
-			{
-			}
+            template<typename... Args>
+            iterator(Args... _args)
+                : m_ptr{ make_tuple(_args...) }
+            {
+            }
 
-			friend class soa::vector;
+            friend class soa::vector;
         };
 
-		class const_iterator
-		{
-			using pointer_list = tuple<const Types*...>;
-			pointer_list m_ptr{};
+        class const_iterator
+        {
+            using pointer_list = tuple<const Types*...>;
+            pointer_list m_ptr{};
 
-			template<typename... Args>
+            template<typename... Args>
             const_iterator(Args... _args)
-				: m_ptr{ make_tuple(_args...) }
-			{
-			}
+                : m_ptr{ make_tuple(_args...) }
+            {
+            }
 
-			friend class soa::vector;
+            friend class soa::vector;
 
-		public:
-			const_reference_list operator*() const
-			{
-				return apply([](auto... _obj) { return const_reference_list{ *(_obj)... }; }, m_ptr);
-			}
+        public:
+            const_reference_list operator*() const
+            {
+                return apply([](auto... _obj) { return const_reference_list{ *(_obj)... }; }, m_ptr);
+            }
 
-			template<MembersDesc MemberIndex>
-			auto& value()
-			{
-				return *get<MemberIndex>(m_ptr);
-			}
+            template<MembersDesc MemberIndex>
+            auto& value()
+            {
+                return *get<MemberIndex>(m_ptr);
+            }
 
             const_iterator& operator++()
-			{
-				apply([](auto*&... _obj) { (++_obj, ...); }, m_ptr);
-				return *this;
-			}
+            {
+                apply([](auto*&... _obj) { (++_obj, ...); }, m_ptr);
+                return *this;
+            }
 
             const_iterator operator++(int)
-			{
-				iterator ret = *this;
-				apply([](auto*&... _obj) { (_obj++, ...); }, m_ptr);
-				return ret;
-			}
+            {
+                iterator ret = *this;
+                apply([](auto*&... _obj) { (_obj++, ...); }, m_ptr);
+                return ret;
+            }
 
             const_iterator& operator--()
-			{
-				apply([](auto*&... _obj) { (--_obj, ...); }, m_ptr);
-				return *this;
-			}
+            {
+                apply([](auto*&... _obj) { (--_obj, ...); }, m_ptr);
+                return *this;
+            }
 
             const_iterator operator--(int)
-			{
-				iterator ret = *this;
-				apply([](auto*&... _obj) { (_obj--, ...); }, m_ptr);
-				return ret;
-			}
+            {
+                iterator ret = *this;
+                apply([](auto*&... _obj) { (_obj--, ...); }, m_ptr);
+                return ret;
+            }
 
-			bool operator==(const const_iterator& _other) const
-			{
-				return m_ptr == _other.m_ptr;
-			}
+            bool operator==(const const_iterator& _other) const
+            {
+                return m_ptr == _other.m_ptr;
+            }
 
-			bool operator!=(const const_iterator& _other) const
-			{
-				return m_ptr != _other.m_ptr;
-			}
-		};
+            bool operator!=(const const_iterator& _other) const
+            {
+                return m_ptr != _other.m_ptr;
+            }
+        };
 
         template<MembersDesc... Members>
         class partial_iterator
@@ -376,30 +374,30 @@ namespace soa
             return begin_internal(make_index_sequence<members_count>{});
         }
 
-		const_iterator begin() const
-		{
-			return begin_internal(make_index_sequence<members_count>{});
-		}
+        const_iterator begin() const
+        {
+            return begin_internal(make_index_sequence<members_count>{});
+        }
 
-		const_iterator cbegin() const
-		{
-			return begin_internal(make_index_sequence<members_count>{});
-		}
+        const_iterator cbegin() const
+        {
+            return begin_internal(make_index_sequence<members_count>{});
+        }
 
-		iterator end()
-		{
-			return end_internal(make_index_sequence<members_count>{});
-		}
+        iterator end()
+        {
+            return end_internal(make_index_sequence<members_count>{});
+        }
 
-		const_iterator end() const
-		{
-			return end_internal(make_index_sequence<members_count>{});
-		}
+        const_iterator end() const
+        {
+            return end_internal(make_index_sequence<members_count>{});
+        }
 
-		const_iterator cend() const
-		{
-			return end_internal(make_index_sequence<members_count>{});
-		}
+        const_iterator cend() const
+        {
+            return end_internal(make_index_sequence<members_count>{});
+        }
 
         template<MembersDesc... Members>
         partial_iterator<Members...> begin()
@@ -571,25 +569,25 @@ namespace soa
             return at_internal<const_reference_list>(_index, make_index_sequence<members_count>{});
         }
 
-		reference_list front()
-		{
-			return ref_at(0);
-		}
+        reference_list front()
+        {
+            return ref_at(0);
+        }
 
-		const_reference_list front() const
-		{
-			return ref_at(0);
-		}
+        const_reference_list front() const
+        {
+            return ref_at(0);
+        }
 
-		reference_list back()
-		{
-			return ref_at(size() - 1);
-		}
+        reference_list back()
+        {
+            return ref_at(size() - 1);
+        }
 
-		const_reference_list back() const
-		{
-			return ref_at(size() - 1);
-		}
+        const_reference_list back() const
+        {
+            return ref_at(size() - 1);
+        }
 
         void sort()
         {
@@ -600,28 +598,28 @@ namespace soa
         template<size_t... I>
         iterator begin_internal(index_sequence<I...>)
         {
-            return { get<static_cast<size_t>(I)>(m_soa).data()...};
+            return { get<static_cast<size_t>(I)>(m_soa).data()... };
         }
 
-		template<size_t... I>
-		const_iterator begin_internal(index_sequence<I...>) const
-		{
-			return { get<static_cast<size_t>(I)>(m_soa).data()... };
-		}
+        template<size_t... I>
+        const_iterator begin_internal(index_sequence<I...>) const
+        {
+            return { get<static_cast<size_t>(I)>(m_soa).data()... };
+        }
 
-		template<size_t... I>
-		iterator end_internal(index_sequence<I...>)
-		{
+        template<size_t... I>
+        iterator end_internal(index_sequence<I...>)
+        {
             const size_t size{ this->size() };
-			return { get<static_cast<size_t>(I)>(m_soa).data() + size... };
-		}
+            return { get<static_cast<size_t>(I)>(m_soa).data() + size... };
+        }
 
-		template<size_t... I>
-		const_iterator end_internal(index_sequence<I...>) const
-		{
+        template<size_t... I>
+        const_iterator end_internal(index_sequence<I...>) const
+        {
             const size_t size{ this->size() };
-			return { get<static_cast<size_t>(I)>(m_soa).data() + size... };
-		}
+            return { get<static_cast<size_t>(I)>(m_soa).data() + size... };
+        }
 
         template<typename Tuple, size_t... I>
         void push_back_internal(Tuple&& _args, index_sequence<I...>)
