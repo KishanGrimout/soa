@@ -71,7 +71,7 @@ namespace soa
         class iterator
         {
         public:
-            using iterator_category = std::contiguous_iterator_tag;
+            using iterator_category = std::random_access_iterator_tag;
             using pointer_list = tuple<Types*...>;
             using difference_type = ptrdiff_t;
 
