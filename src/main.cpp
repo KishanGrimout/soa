@@ -88,70 +88,10 @@ public:
 };
 using ExampleCustomAllocator = soa::vector<Example, CustomAllocator, vector3, int, float, std::string, Checker>;
 
-#if 0
-template<size_t Size, typename... Types>
-class StaticAllocator
-{
-    template<typename T, size_t Count>
-    struct StaticBuffer
-    {
-        alignas(T) unsigned char data[sizeof(T) * Count];
-        bool allocated{ false };
-    };
-    
-	std::tuple<StaticBuffer<Types, Size>>...> m_arrays;
-
-    std::array<StaticBuffer<size_t, 8>, sizeof...(Types)> m_proxys;
-    size_t m_freeProxy{ 0 };
-
-    template<typename T, typename... Types>
-    std::pair<bool&, void*> getBuffer()
-    {
-        if constexpr ((std::is_same<Types, T>::value || ...))
-        {
-            auto& typedBuffer = std::get<StaticBuffer<T, Size>>(m_arrays);
-            return { typedBuffer.allocated, typedBuffer.data };
-        }
-        else
-        {
-            auto& freeProxy = m_proxys[m_freeProxy];
-            return { freeProxy.allocated, m_otherStuff.data };
-        }
-    }
-
-public:
-	template<typename T>
-	T* allocate(size_t _count)
-	{
-        using TypedArray = T[Size];
-		auto array = getBuffer<T, Types...>();
-		assert(array.first == false);
-		array.first = true;
-		return reinterpret_cast<T*>(array.second);
-	}
-
-	template<typename T>
-	void free(T* _ptr)
-	{
-		auto array = getBuffer<T, Types...>();
-		assert(array.first == true);
-		assert(array.second == _ptr);
-		array.first = false;
-	}
-};
-
-template<size_t Size>
-using InplaceExampleAllocator = StaticAllocator<Size, vector3, int, float, std::string>;
-
-template<size_t Size>
-using InplaceSao = soa::vector<Example, InplaceExampleAllocator<Size>, vector3, int, float, std::string>;
-#endif
-
 int main()
 {
     // Create an empty SOA
     ExampleArray test;
-    //InplaceSao<100> testStatic;
 
     char bigBuffer[1024];
     ExampleCustomAllocator testCustom{ CustomAllocator{ bigBuffer } };
