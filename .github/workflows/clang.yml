@@ -1,7 +1,7 @@
 name: Clang
 
 on:
-  push
+  push:
   pull_request:
     branches: [ "main" ]
 
