@@ -15,8 +15,8 @@ namespace soa
     template <typename... Types>
     using tuple = std::tuple<Types...>;
 
-    template <size_t _Index, typename _Tuple>
-    using tuple_element_t = std::tuple_element_t<_Index, _Tuple>;
+    template <size_t Index, typename Tuple>
+    using tuple_element_t = std::tuple_element_t<Index, Tuple>;
 
     template <typename T, typename Allocator>
     using container = std::vector<T, Allocator>;
@@ -32,6 +32,8 @@ namespace soa
 
     template <typename T>
     using decay_t = std::decay_t<T>;
+
+    using ptrdiff_t = std::ptrdiff_t;
 
     using std::apply;
     using std::get;
@@ -135,7 +137,7 @@ namespace soa
             {
             }
 
-            friend class soa::vector;
+            friend class soa::vector<MembersDesc, Allocator, Types...>;
         };
 
         class const_iterator
@@ -149,7 +151,7 @@ namespace soa
             {
             }
 
-            friend class soa::vector;
+            friend class soa::vector<MembersDesc, Allocator, Types...>;
 
         public:
             const_reference_list operator*() const
@@ -213,7 +215,7 @@ namespace soa
             {
             }
 
-            friend class soa::vector;
+            friend class soa::vector<MembersDesc, Allocator, Types...>;
 
             template<MembersDesc MemberIndex, size_t Index = 0>
             static constexpr size_t getIndex()
@@ -286,7 +288,7 @@ namespace soa
             {
             }
 
-            friend class soa::vector;
+            friend class soa::vector<MembersDesc, Allocator, Types...>;
 
             template<MembersDesc MemberIndex, size_t Index = 0>
             static constexpr size_t getIndex()
@@ -636,13 +638,13 @@ namespace soa
         template<typename Tuple, size_t... I>
         void insert_internal(size_t _pos, Tuple&& _args, index_sequence<I...>)
         {
-            (get<I>(m_soa).insert(get<I>(m_soa).begin() + _pos, get<I>(std::forward<Tuple>(_args))), ...);
+            (get<I>(m_soa).insert(get<I>(m_soa).begin() + static_cast<ptrdiff_t>(_pos), get<I>(std::forward<Tuple>(_args))), ...);
         }
 
         template<size_t... I>
         size_t erase_internal(size_t _startPos, size_t _endPos, index_sequence<I...>)
         {
-            (get<I>(m_soa).erase(get<I>(m_soa).begin() + _startPos, get<I>(m_soa).begin() + _endPos), ...);
+            (get<I>(m_soa).erase(get<I>(m_soa).begin() + static_cast<ptrdiff_t>(_startPos), get<I>(m_soa).begin() + static_cast<ptrdiff_t>(_endPos)), ...);
             return _startPos;
         }
 
@@ -699,12 +701,12 @@ namespace soa
 
             [[nodiscard]] pointer allocate(size_t _count)
             {
-                return m_allocator.allocate<T>(_count);
+                return m_allocator.template allocate<T>(_count);
             }
 
-            void deallocate(pointer _ptr, size_t _count)
+            void deallocate(pointer _ptr, size_t /*_count*/)
             {
-                m_allocator.free<T>(_ptr);
+                m_allocator.template free<T>(_ptr);
             }
         };
 

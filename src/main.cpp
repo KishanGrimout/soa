@@ -1,4 +1,3 @@
-#define _ENABLE_EXTENDED_ALIGNED_STORAGE
 
 #include "soa/soa.h"
 
@@ -6,6 +5,7 @@
 #include <algorithm>
 #include <assert.h>
 
+// Demo purpose position type
 struct vector3
 {
     float x, y, z;
@@ -13,9 +13,10 @@ struct vector3
 
 inline bool operator==(const vector3& _lhs, const vector3& _rhs)
 {
-	return _lhs.x == _rhs.x && _lhs.y == _rhs.y && _lhs.z == _rhs.z;
+	return &_lhs == &_rhs;
 }
 
+// Small helper type to check copies or moves are performed on some operations
 struct Checker
 {
     Checker() : defaultCtor{ true } {}
@@ -74,13 +75,13 @@ public:
     }
 
     template<typename T>
-    T* allocate(size_t _count)
+    T* allocate(size_t /*_count*/)
     {
         return reinterpret_cast<T*>(m_buffer);
     }
 
     template<typename T>
-    void free(T* _ptr)
+    void free(T* /*_ptr*/)
     {
 
     }
@@ -264,11 +265,11 @@ int main()
         std::get<1>(refIt) = "new value";
 
         // But there are helper methods allowing to reuse the MembersDesc enum values and map to the correct tuple element.
-        vector3& pos = it.value<Example::Position>();
-        std::string& name = it.value<Example::Name>();
+        [[maybe_unused]] vector3& itPos = it.value<Example::Position>();
+        [[maybe_unused]] std::string& itName = it.value<Example::Name>();
     }
 
-    ExampleArray::partial_iterator<Example::Position, Example::Name> findItem = std::find_if(
+    [[maybe_unused]] ExampleArray::partial_iterator<Example::Position, Example::Name> findItem = std::find_if(
         test.begin<Example::Position, Example::Name>(),
         test.end<Example::Position, Example::Name>(),
         [](const ExampleArray::partial_ref_list<Example::Position, Example::Name>& _element) {
@@ -282,8 +283,8 @@ int main()
 
 	{
         test.shrink_to_fit();
-		ExampleArray::const_iterator it = test.cbegin();
-        assert(it == test.cend());
+		ExampleArray::const_iterator itOnEmpty = test.cbegin();
+        assert(itOnEmpty == test.cend());
 	}
 
     return 0;
