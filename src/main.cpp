@@ -1,9 +1,10 @@
 
 #include "soa/soa.h"
 
-#include <string>
 #include <algorithm>
 #include <assert.h>
+#include <string>
+#include <utility>
 
 // Demo purpose position type
 struct vector3

@@ -724,7 +724,7 @@ namespace soa
 #ifdef _WIN32
             return reinterpret_cast<T*>(_aligned_malloc(_count * sizeof(T), alignment));
 #else
-            return reinterpret_cast<T*>(SOA_STD aligned_alloc(alignment, _count * sizeof(T)));
+            return reinterpret_cast<T*>(aligned_alloc(alignment, _count * sizeof(T)));
 #endif
         }
 
@@ -734,7 +734,7 @@ namespace soa
 #ifdef _WIN32
             _aligned_free(_ptr);
 #else
-            SOA_STD free(_ptr);
+            free(_ptr);
 #endif
         }
     };
