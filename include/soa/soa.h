@@ -370,7 +370,7 @@ namespace soa
 
         private:
             static constexpr array<size_t, sizeof...(Members)> ms_mapping{ static_cast<size_t>(Members)... };
-            
+
             pointer_list m_ptr{};
 
             template<typename... Args>
