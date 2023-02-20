@@ -58,7 +58,7 @@ namespace soa
         using reference_list = tuple<Types&...>;
         using const_reference_list = tuple<const Types&...>;
 
-        static constexpr size_t members_count = sizeof...(Types);
+        static constexpr size_t members_count{ sizeof...(Types) };
         static_assert(members_count == static_cast<size_t>(MembersDesc::Count), "The MembersDesc enum must match the number of types");
 
         template<MembersDesc... Members>
@@ -147,7 +147,6 @@ namespace soa
         class const_iterator
         {
         public:
-
             using pointer_list = tuple<const Types*...>;
             using iterator_category = std::random_access_iterator_tag;
             using difference_type = ptrdiff_t;
@@ -636,7 +635,6 @@ namespace soa
 
         void sort()
         {
-
         }
 
     private:
@@ -715,10 +713,8 @@ namespace soa
             allocator_wrapper(Allocator&& _allocator)
                 : m_allocator{ std::move(_allocator) }
             {
-
             }
 
-            //allocator_wrapper() = default;
             allocator_wrapper(const allocator_wrapper&) = default;
 
             template<typename U>
