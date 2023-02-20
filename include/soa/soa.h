@@ -73,7 +73,10 @@ namespace soa
         public:
             using pointer_list = tuple<Types*...>;
             using iterator_category = std::random_access_iterator_tag;
-            using difference_type = std::make_signed_t<size_t>;
+            using difference_type = ptrdiff_t;
+            using reference = reference_list;
+            using value_type = void;
+            using pointer = void;
 
             iterator() = default;
 
@@ -147,7 +150,10 @@ namespace soa
 
             using pointer_list = tuple<const Types*...>;
             using iterator_category = std::random_access_iterator_tag;
-            using difference_type = std::make_signed_t<size_t>;
+            using difference_type = ptrdiff_t;
+            using reference = reference_list;
+            using value_type = void;
+            using pointer = void;
 
             const_reference_list operator*() const
             {
@@ -214,7 +220,10 @@ namespace soa
         public:
             using pointer_list = tuple<tuple_element_t<static_cast<size_t>(Members), value_list>*...>;
             using iterator_category = std::random_access_iterator_tag;
-            using difference_type = std::make_signed_t<size_t>;
+            using difference_type = ptrdiff_t;
+            using reference = partial_ref_list<Members...>;
+            using value_type = void;
+            using pointer = void;
 
             partial_ref_list<Members...> operator*() const
             {
@@ -292,7 +301,10 @@ namespace soa
         public:
             using pointer_list = tuple<const tuple_element_t<static_cast<size_t>(Members), value_list>*...>;
             using iterator_category = std::random_access_iterator_tag;
-            using difference_type = std::make_signed_t<size_t>;
+            using difference_type = ptrdiff_t;
+            using reference = partial_const_ref_list<Members...>;
+            using value_type = void;
+            using pointer = void;
 
             partial_const_ref_list<Members...> operator*() const
             {
