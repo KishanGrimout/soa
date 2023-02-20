@@ -14,7 +14,7 @@ struct vector3
 
 inline bool operator==(const vector3& _lhs, const vector3& _rhs)
 {
-	return &_lhs == &_rhs;
+    return &_lhs == &_rhs;
 }
 
 // Small helper type to check copies or moves are performed on some operations
@@ -184,11 +184,11 @@ int main()
     assert(test.at<Example::Checker>(0).moveCtor);
 
     // But there are iterators of the full structure
-	{
+    {
         ExampleArray::iterator it = test.begin();
-		auto end = test.end();
+        auto end = test.end();
         assert(it != end);
-	}
+    }
 
     // And also partial iterators, working on a subset of members, to iterate only on the members you need
     ExampleArray::partial_iterator<Example::Position, Example::Name> it = test.begin<Example::Position, Example::Name>();
@@ -222,11 +222,11 @@ int main()
     test.clear();
     assert(test.empty());
 
-	{
+    {
         test.shrink_to_fit();
-		ExampleArray::const_iterator itOnEmpty = test.cbegin();
+        ExampleArray::const_iterator itOnEmpty = test.cbegin();
         assert(itOnEmpty == test.cend());
-	}
+    }
 
     return 0;
 }
