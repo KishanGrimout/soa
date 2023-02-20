@@ -192,6 +192,11 @@ namespace soa
                 return ret;
             }
 
+            difference_type operator-(const iterator& _other) const
+            {
+                return get<0>(m_ptr) - get<0>(_other.m_ptr);
+            }
+
             bool operator==(const const_iterator& _other) const
             {
                 return m_ptr == _other.m_ptr;
@@ -260,6 +265,11 @@ namespace soa
                 partial_iterator ret = *this;
                 apply([](auto*&... _obj) { (_obj--, ...); }, m_ptr);
                 return ret;
+            }
+
+            difference_type operator-(const iterator& _other) const
+            {
+                return get<0>(m_ptr) - get<0>(_other.m_ptr);
             }
 
             bool operator==(const partial_iterator& _other) const
@@ -341,6 +351,11 @@ namespace soa
                 partial_const_iterator ret = *this;
                 apply([](auto*&... _obj) { (_obj--, ...); }, m_ptr);
                 return ret;
+            }
+
+            difference_type operator-(const iterator& _other) const
+            {
+                return get<0>(m_ptr) - get<0>(_other.m_ptr);
             }
 
             bool operator==(const partial_const_iterator& _other) const
