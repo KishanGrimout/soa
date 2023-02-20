@@ -71,9 +71,9 @@ namespace soa
         class iterator
         {
         public:
-            using iterator_category = std::random_access_iterator_tag;
             using pointer_list = tuple<Types*...>;
-            using difference_type = ptrdiff_t;
+            using iterator_category = std::random_access_iterator_tag;
+            using difference_type = std::make_signed_t<size_t>;
 
             iterator() = default;
 
@@ -143,18 +143,12 @@ namespace soa
 
         class const_iterator
         {
-            using pointer_list = tuple<const Types*...>;
-            pointer_list m_ptr{};
-
-            template<typename... Args>
-            const_iterator(Args... _args)
-                : m_ptr{ make_tuple(_args...) }
-            {
-            }
-
-            friend class soa::vector<MembersDesc, Allocator, Types...>;
-
         public:
+
+            using pointer_list = tuple<const Types*...>;
+            using iterator_category = std::random_access_iterator_tag;
+            using difference_type = std::make_signed_t<size_t>;
+
             const_reference_list operator*() const
             {
                 return apply([](auto... _obj) { return const_reference_list{ *(_obj)... }; }, m_ptr);
@@ -201,33 +195,27 @@ namespace soa
             {
                 return m_ptr != _other.m_ptr;
             }
-        };
 
-        template<MembersDesc... Members>
-        class partial_iterator
-        {
-            static constexpr array<size_t, sizeof...(Members)> ms_mapping{ static_cast<size_t>(Members)... };
-            using pointer_list = tuple<tuple_element_t<static_cast<size_t>(Members), value_list>*...>;
+        private:
             pointer_list m_ptr{};
 
             template<typename... Args>
-            partial_iterator(Args... _args)
+            const_iterator(Args... _args)
                 : m_ptr{ make_tuple(_args...) }
             {
             }
 
             friend class soa::vector<MembersDesc, Allocator, Types...>;
+        };
 
-            template<MembersDesc MemberIndex, size_t Index = 0>
-            static constexpr size_t getIndex()
-            {
-                if constexpr (ms_mapping[Index] == static_cast<size_t>(MemberIndex))
-                    return Index;
-                else
-                    return getIndex<MemberIndex, Index + 1>();
-            }
-
+        template<MembersDesc... Members>
+        class partial_iterator
+        {
         public:
+            using pointer_list = tuple<tuple_element_t<static_cast<size_t>(Members), value_list>*...>;
+            using iterator_category = std::random_access_iterator_tag;
+            using difference_type = std::make_signed_t<size_t>;
+
             partial_ref_list<Members...> operator*() const
             {
                 return apply([](auto... _obj) { return partial_ref_list<Members...>{ *(_obj)...}; }, m_ptr);
@@ -274,17 +262,14 @@ namespace soa
             {
                 return m_ptr != _other.m_ptr;
             }
-        };
 
-        template<MembersDesc... Members>
-        class partial_const_iterator
-        {
+        private:
             static constexpr array<size_t, sizeof...(Members)> ms_mapping{ static_cast<size_t>(Members)... };
-            using pointer_list = tuple<const tuple_element_t<static_cast<size_t>(Members), value_list>*...>;
+
             pointer_list m_ptr{};
 
             template<typename... Args>
-            partial_const_iterator(Args... _args)
+            partial_iterator(Args... _args)
                 : m_ptr{ make_tuple(_args...) }
             {
             }
@@ -299,8 +284,16 @@ namespace soa
                 else
                     return getIndex<MemberIndex, Index + 1>();
             }
+        };
 
+        template<MembersDesc... Members>
+        class partial_const_iterator
+        {
         public:
+            using pointer_list = tuple<const tuple_element_t<static_cast<size_t>(Members), value_list>*...>;
+            using iterator_category = std::random_access_iterator_tag;
+            using difference_type = std::make_signed_t<size_t>;
+
             partial_const_ref_list<Members...> operator*() const
             {
                 return apply([](auto... _obj) { return partial_const_ref_list<Members...>{ *(_obj)...}; }, m_ptr);
@@ -346,6 +339,28 @@ namespace soa
             bool operator!=(const partial_const_iterator& _other) const
             {
                 return m_ptr != _other.m_ptr;
+            }
+
+        private:
+            static constexpr array<size_t, sizeof...(Members)> ms_mapping{ static_cast<size_t>(Members)... };
+            
+            pointer_list m_ptr{};
+
+            template<typename... Args>
+            partial_const_iterator(Args... _args)
+                : m_ptr{ make_tuple(_args...) }
+            {
+            }
+
+            friend class soa::vector<MembersDesc, Allocator, Types...>;
+
+            template<MembersDesc MemberIndex, size_t Index = 0>
+            static constexpr size_t getIndex()
+            {
+                if constexpr (ms_mapping[Index] == static_cast<size_t>(MemberIndex))
+                    return Index;
+                else
+                    return getIndex<MemberIndex, Index + 1>();
             }
         };
 
