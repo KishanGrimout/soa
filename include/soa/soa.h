@@ -192,7 +192,7 @@ namespace soa
                 return ret;
             }
 
-            difference_type operator-(const iterator& _other) const
+            difference_type operator-(const const_iterator& _other) const
             {
                 return get<0>(m_ptr) - get<0>(_other.m_ptr);
             }
@@ -267,7 +267,7 @@ namespace soa
                 return ret;
             }
 
-            difference_type operator-(const iterator& _other) const
+            difference_type operator-(const partial_iterator& _other) const
             {
                 return get<0>(m_ptr) - get<0>(_other.m_ptr);
             }
@@ -353,7 +353,7 @@ namespace soa
                 return ret;
             }
 
-            difference_type operator-(const iterator& _other) const
+            difference_type operator-(const partial_const_iterator& _other) const
             {
                 return get<0>(m_ptr) - get<0>(_other.m_ptr);
             }
