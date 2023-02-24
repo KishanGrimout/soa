@@ -49,6 +49,16 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IntDir>$(Platform)_clangcl\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_clangcl</TargetName>
+    <OutDir>$(SolutionDir)$(Platform)_clangcl\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IntDir>$(Platform)_clangcl\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_clangcl</TargetName>
+    <OutDir>$(SolutionDir)$(Platform)_clangcl\$(Configuration)\</OutDir>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>EnableAllWarnings</WarningLevel>

@@ -38,4 +38,5 @@
 *.log
 *.pdb
 x64/
+x64_clangcl/
 .vs/
