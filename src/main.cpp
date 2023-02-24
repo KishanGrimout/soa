@@ -210,11 +210,13 @@ int main()
         ExampleArray::iterator it = test.begin();
         auto end = test.end();
         assert(it != end);
+        assert(end - it == static_cast<ptrdiff_t>(test.size()));
     }
 
     // And also partial iterators, working on a subset of members, to iterate only on the members you need
     ExampleArray::partial_iterator<Example::Position, Example::Name> it = test.begin<Example::Position, Example::Name>();
     auto end = test.end<Example::Position, Example::Name>();
+    assert(end - it == static_cast<ptrdiff_t>(test.size()));
 
     for (; it != end; ++it)
     {

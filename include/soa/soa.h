@@ -68,99 +68,23 @@ namespace soa
         using partial_const_ref_list = tuple<const tuple_element_t<static_cast<size_t>(Members), value_list>&...>;
 
     public:
-        class iterator
-        {
-        public:
-            using pointer_list = tuple<Types*...>;
-            using iterator_category = std::random_access_iterator_tag;
-            using difference_type = ptrdiff_t;
-            using reference = reference_list;
-            using value_type = void;
-            using pointer = void;
-
-            iterator() = default;
-
-            reference_list operator*() const
-            {
-                return apply([](auto... _obj) { return reference_list{ *(_obj)... }; }, m_ptr);
-            }
-
-            template<MembersDesc MemberIndex>
-            auto& value()
-            {
-                return *get<MemberIndex>(m_ptr);
-            }
-
-            iterator& operator++()
-            {
-                apply([](auto*&... _obj) { (++_obj, ...); }, m_ptr);
-                return *this;
-            }
-
-            iterator operator++(int)
-            {
-                iterator ret = *this;
-                apply([](auto*&... _obj) { (_obj++, ...); }, m_ptr);
-                return ret;
-            }
-
-            iterator& operator--()
-            {
-                apply([](auto*&... _obj) { (--_obj, ...); }, m_ptr);
-                return *this;
-            }
-
-            iterator operator--(int)
-            {
-                iterator ret = *this;
-                apply([](auto*&... _obj) { (_obj--, ...); }, m_ptr);
-                return ret;
-            }
-
-            difference_type operator-(const iterator& _other) const
-            {
-                return get<0>(m_ptr) - get<0>(_other.m_ptr);
-            }
-
-            bool operator==(const iterator& _other) const
-            {
-                return m_ptr == _other.m_ptr;
-            }
-
-            bool operator!=(const iterator& _other) const
-            {
-                return m_ptr != _other.m_ptr;
-            }
-
-        private:
-            pointer_list m_ptr{};
-
-            template<typename... Args>
-            iterator(Args... _args)
-                : m_ptr{ make_tuple(_args...) }
-            {
-            }
-
-            friend class soa::vector_base<MembersDesc, Allocator, Types...>;
-        };
 
         class const_iterator
         {
         public:
-            using pointer_list = tuple<const Types*...>;
+            using pointer = tuple<const Types*...>;
             using iterator_category = std::random_access_iterator_tag;
             using difference_type = ptrdiff_t;
-            using reference = reference_list;
-            using value_type = void;
-            using pointer = void;
+            using reference = const_reference_list;
+            using value_type = value_list;
 
-            const_reference_list operator*() const
+            reference operator*() const
             {
-                return apply([](auto... _obj) { return const_reference_list{ *(_obj)... }; }, m_ptr);
+                return apply([](auto... _obj) { return reference{ *(_obj)... }; }, m_ptr);
             }
 
             template<MembersDesc MemberIndex>
-            auto& value()
+            const auto& value() const
             {
                 return *get<MemberIndex>(m_ptr);
             }
@@ -207,13 +131,67 @@ namespace soa
             }
 
         private:
-            pointer_list m_ptr{};
+            pointer m_ptr{};
 
             template<typename... Args>
             const_iterator(Args... _args)
                 : m_ptr{ make_tuple(_args...) }
             {
             }
+
+            friend class soa::vector_base<MembersDesc, Allocator, Types...>;
+        };
+
+        class iterator : public const_iterator
+        {
+        public:
+            using pointer = tuple<Types*...>;
+            using iterator_category = std::random_access_iterator_tag;
+            using difference_type = ptrdiff_t;
+            using reference = reference_list;
+            using value_type = value_list;
+
+            iterator() = default;
+
+            reference_list operator*() const
+            {
+                return apply([](auto... _obj) { return reference_list{ *(_obj)... }; }, const_iterator::m_ptr);
+            }
+
+            template<MembersDesc MemberIndex>
+            auto& value()
+            {
+                return *get<MemberIndex>(const_iterator::m_ptr);
+            }
+
+            iterator& operator++()
+            {
+                const_iterator::operator++();
+                return *this;
+            }
+
+            iterator operator++(int)
+            {
+                iterator ret = *this;
+                const_iterator::operator++();
+                return ret;
+            }
+
+            iterator& operator--()
+            {
+                const_iterator::operator--();
+                return *this;
+            }
+
+            iterator operator--(int)
+            {
+                iterator ret = *this;
+                const_iterator::operator--();
+                return ret;
+            }
+
+        private:
+            using const_iterator::const_iterator;
 
             friend class soa::vector_base<MembersDesc, Allocator, Types...>;
         };
