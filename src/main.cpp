@@ -210,6 +210,8 @@ int main()
         ExampleArray::iterator it = test.begin();
         auto end = test.end();
         assert(it != end);
+        *it;
+        [[maybe_unused]] vector3& itPos = it.value<Example::Position>();
         assert(end - it == static_cast<ptrdiff_t>(test.size()));
     }
 

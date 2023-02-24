@@ -33,6 +33,9 @@ namespace soa
     template <typename T>
     using decay_t = std::decay_t<T>;
 
+    template <typename T>
+    using remove_const_t = std::remove_const_t<T>;
+
     using ptrdiff_t = std::ptrdiff_t;
 
     using std::apply;
@@ -130,7 +133,7 @@ namespace soa
                 return m_ptr != _other.m_ptr;
             }
 
-        private:
+        protected:
             pointer m_ptr{};
 
             template<typename... Args>
@@ -155,13 +158,13 @@ namespace soa
 
             reference_list operator*() const
             {
-                return apply([](auto... _obj) { return reference_list{ *(_obj)... }; }, const_iterator::m_ptr);
+                return apply([](auto... _obj) { return reference_list{ *const_cast<remove_const_t<decltype(_obj)>>(_obj)...}; }, const_iterator::m_ptr);
             }
 
             template<MembersDesc MemberIndex>
             auto& value()
             {
-                return *get<MemberIndex>(const_iterator::m_ptr);
+                return *const_cast<tuple_element_t<static_cast<size_t>(MemberIndex), pointer>>(get<static_cast<size_t>(MemberIndex)>(const_iterator::m_ptr));
             }
 
             iterator& operator++()
@@ -197,101 +200,14 @@ namespace soa
         };
 
         template<MembersDesc... Members>
-        class partial_iterator
-        {
-        public:
-            using pointer_list = tuple<tuple_element_t<static_cast<size_t>(Members), value_list>*...>;
-            using iterator_category = std::random_access_iterator_tag;
-            using difference_type = ptrdiff_t;
-            using reference = partial_ref_list<Members...>;
-            using value_type = void;
-            using pointer = void;
-
-            partial_ref_list<Members...> operator*() const
-            {
-                return apply([](auto... _obj) { return partial_ref_list<Members...>{ *(_obj)...}; }, m_ptr);
-            }
-
-            template<MembersDesc MemberIndex>
-            auto& value()
-            {
-                return *get<getIndex<MemberIndex>()>(m_ptr);
-            }
-
-            partial_iterator& operator++()
-            {
-                apply([](auto*&... _obj) { (++_obj, ...); }, m_ptr);
-                return *this;
-            }
-
-            partial_iterator operator++(int)
-            {
-                partial_iterator ret = *this;
-                apply([](auto*&... _obj) { (_obj++, ...); }, m_ptr);
-                return ret;
-            }
-
-            partial_iterator& operator--()
-            {
-                apply([](auto*&... _obj) { (--_obj, ...); }, m_ptr);
-                return *this;
-            }
-
-            partial_iterator operator--(int)
-            {
-                partial_iterator ret = *this;
-                apply([](auto*&... _obj) { (_obj--, ...); }, m_ptr);
-                return ret;
-            }
-
-            difference_type operator-(const partial_iterator& _other) const
-            {
-                return get<0>(m_ptr) - get<0>(_other.m_ptr);
-            }
-
-            bool operator==(const partial_iterator& _other) const
-            {
-                return m_ptr == _other.m_ptr;
-            }
-
-            bool operator!=(const partial_iterator& _other) const
-            {
-                return m_ptr != _other.m_ptr;
-            }
-
-        private:
-            static constexpr array<size_t, sizeof...(Members)> ms_mapping{ static_cast<size_t>(Members)... };
-
-            pointer_list m_ptr{};
-
-            template<typename... Args>
-            partial_iterator(Args... _args)
-                : m_ptr{ make_tuple(_args...) }
-            {
-            }
-
-            friend class soa::vector_base<MembersDesc, Allocator, Types...>;
-
-            template<MembersDesc MemberIndex, size_t Index = 0>
-            static constexpr size_t getIndex()
-            {
-                if constexpr (ms_mapping[Index] == static_cast<size_t>(MemberIndex))
-                    return Index;
-                else
-                    return getIndex<MemberIndex, Index + 1>();
-            }
-        };
-
-        template<MembersDesc... Members>
         class partial_const_iterator
         {
         public:
-            using pointer_list = tuple<const tuple_element_t<static_cast<size_t>(Members), value_list>*...>;
+            using pointer = tuple<const tuple_element_t<static_cast<size_t>(Members), value_list>*...>;
             using iterator_category = std::random_access_iterator_tag;
             using difference_type = ptrdiff_t;
             using reference = partial_const_ref_list<Members...>;
             using value_type = void;
-            using pointer = void;
 
             partial_const_ref_list<Members...> operator*() const
             {
@@ -345,10 +261,10 @@ namespace soa
                 return m_ptr != _other.m_ptr;
             }
 
-        private:
+        protected:
             static constexpr array<size_t, sizeof...(Members)> ms_mapping{ static_cast<size_t>(Members)... };
 
-            pointer_list m_ptr{};
+            pointer m_ptr{};
 
             template<typename... Args>
             partial_const_iterator(Args... _args)
@@ -366,6 +282,75 @@ namespace soa
                 else
                     return getIndex<MemberIndex, Index + 1>();
             }
+        };
+
+        template<MembersDesc... Members>
+        class partial_iterator : public partial_const_iterator<Members...>
+        {
+            using base_iterator = partial_const_iterator<Members...>;
+
+            template<MembersDesc MemberIndex, size_t Index = 0>
+            static constexpr size_t getIndex()
+            {
+                if constexpr (base_iterator::ms_mapping[Index] == static_cast<size_t>(MemberIndex))
+                    return Index;
+                else
+                    return getIndex<MemberIndex, Index + 1>();
+            }
+
+        public:
+            using pointer = tuple<tuple_element_t<static_cast<size_t>(Members), value_list>*...>;
+            using iterator_category = std::random_access_iterator_tag;
+            using difference_type = ptrdiff_t;
+            using reference = partial_ref_list<Members...>;
+            using value_type = void;
+
+            partial_ref_list<Members...> operator*() const
+            {
+                return apply(
+                    [](auto... _obj) {
+                        return partial_ref_list<Members...>{ *(_obj)... };
+                    },
+                    base_iterator::m_ptr);
+            }
+
+            template<MembersDesc MemberIndex>
+            auto& value()
+            {
+                return *const_cast<tuple_element_t<getIndex<MemberIndex>(), pointer>>(get<getIndex<MemberIndex>()>(base_iterator::m_ptr));
+                //return *get<getIndex<MemberIndex>()>(base_iterator::m_ptr);
+            }
+
+            partial_iterator& operator++()
+            {
+                base_iterator::operator++();
+                return *this;
+            }
+
+            partial_iterator operator++(int)
+            {
+                partial_iterator ret = *this;
+                base_iterator::operator++();
+                return ret;
+            }
+
+            partial_iterator& operator--()
+            {
+                base_iterator::operator--();
+                return *this;
+            }
+
+            partial_iterator operator--(int)
+            {
+                partial_iterator ret = *this;
+                base_iterator::operator--();
+                return ret;
+            }
+
+        private:
+            using base_iterator::partial_const_iterator;
+
+            friend class soa::vector_base<MembersDesc, Allocator, Types...>;
         };
 
         vector_base() = default;
@@ -753,8 +738,8 @@ namespace soa
 #else
             free(_ptr);
 #endif
-        }
-    };
+    }
+};
 
     template<typename MembersDesc, typename... Types>
     using vector = soa::vector_base<MembersDesc, soa::std_allocator, Types...>;
