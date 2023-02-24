@@ -7,9 +7,9 @@
 #include <utility>
 
 // Demo purpose position type
-struct vector3
+struct alignas(16) vector3
 {
-    float x, y, z;
+    float x, y, z, w{};
 };
 
 inline bool operator==(const vector3& _lhs, const vector3& _rhs)
@@ -62,40 +62,62 @@ enum class Example
 
 // You create your structure of arrays, given your members description enum
 // and the list of members types, that must match your enum
-using ExampleArray = soa::vector_std_alloc<Example, vector3, int, float, std::string, Checker>;
+using ExampleArray = soa::vector<Example, vector3, int, float, std::string, Checker>;
 
-// You can also create one with a custom allocator.
-class CustomAllocator
+class AllocatorInterface
 {
-    char* m_buffer;
 public:
-    CustomAllocator(char* _buffer)
-        : m_buffer(_buffer)
-    {
+    virtual ~AllocatorInterface() = default;
+    virtual void* allocate(size_t _size, size_t _align) = 0;
+    virtual void free(void* _ptr) = 0;
+};
 
+class ActualAllocator : public AllocatorInterface
+{
+    void* allocate(size_t _size, size_t /*_align*/) override
+    {
+        return new char[_size];
     }
 
-    template<typename T>
-    T* allocate(size_t /*_count*/)
+    void free(void* _ptr) override
     {
-        return reinterpret_cast<T*>(m_buffer);
-    }
-
-    template<typename T>
-    void free(T* /*_ptr*/)
-    {
-
+        delete[] static_cast<char*>(_ptr);
     }
 };
-using ExampleCustomAllocator = soa::vector<Example, CustomAllocator, vector3, int, float, std::string, Checker>;
+
+// You can also create one with a custom allocator.
+class PolymorphicAllocator
+{
+    AllocatorInterface& m_allocator;
+
+public:
+    PolymorphicAllocator(AllocatorInterface& _allocator)
+        : m_allocator(_allocator)
+    {
+
+    }
+
+    template<typename T>
+    T* allocate(size_t _count)
+    {
+        return static_cast<T*>(m_allocator.allocate(_count * sizeof(T), alignof(T)));
+    }
+
+    template<typename T>
+    void free(T* _ptr)
+    {
+        m_allocator.free(_ptr);
+    }
+};
+using ExampleCustomAllocator = soa::vector_base<Example, PolymorphicAllocator, vector3, int, float, std::string, Checker>;
 
 int main()
 {
     // Create an empty SOA
     ExampleArray test;
 
-    char bigBuffer[1024];
-    ExampleCustomAllocator testCustom{ CustomAllocator{ bigBuffer } };
+    ActualAllocator allocator;
+    ExampleCustomAllocator testCustom{ allocator };
 
     // Interface is similar to std::vector
     size_t size = test.size();

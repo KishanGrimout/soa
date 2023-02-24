@@ -51,7 +51,7 @@ namespace soa
 namespace soa
 {
     template <typename MembersDesc, typename Allocator, typename... Types>
-    class vector
+    class vector_base
     {
     public:
         using value_list = tuple<Types...>;
@@ -141,7 +141,7 @@ namespace soa
             {
             }
 
-            friend class soa::vector<MembersDesc, Allocator, Types...>;
+            friend class soa::vector_base<MembersDesc, Allocator, Types...>;
         };
 
         class const_iterator
@@ -215,7 +215,7 @@ namespace soa
             {
             }
 
-            friend class soa::vector<MembersDesc, Allocator, Types...>;
+            friend class soa::vector_base<MembersDesc, Allocator, Types...>;
         };
 
         template<MembersDesc... Members>
@@ -292,7 +292,7 @@ namespace soa
             {
             }
 
-            friend class soa::vector<MembersDesc, Allocator, Types...>;
+            friend class soa::vector_base<MembersDesc, Allocator, Types...>;
 
             template<MembersDesc MemberIndex, size_t Index = 0>
             static constexpr size_t getIndex()
@@ -378,7 +378,7 @@ namespace soa
             {
             }
 
-            friend class soa::vector<MembersDesc, Allocator, Types...>;
+            friend class soa::vector_base<MembersDesc, Allocator, Types...>;
 
             template<MembersDesc MemberIndex, size_t Index = 0>
             static constexpr size_t getIndex()
@@ -390,9 +390,9 @@ namespace soa
             }
         };
 
-        vector() = default;
+        vector_base() = default;
 
-        explicit vector(Allocator _allocator)
+        explicit vector_base(Allocator _allocator)
             : m_soa{ container<Types, allocator_wrapper<Types>>{ std::move(_allocator) }... }
         {
 
@@ -752,23 +752,23 @@ namespace soa
         tuple<container<Types, allocator_wrapper<Types>>...> m_soa{ container<Types, allocator_wrapper<Types>>{ Allocator{} }... };
     };
 
-    struct default_allocator
+    struct std_allocator
     {
         template<typename T>
-        T* allocate(size_t _count)
+        static T* allocate(size_t _count)
         {
             constexpr size_t cache_line_size{ 64 };
             constexpr size_t alignment = alignof(T) > cache_line_size ? alignof(T) : cache_line_size;
 
 #ifdef _WIN32
-            return reinterpret_cast<T*>(_aligned_malloc(_count * sizeof(T), alignment));
+            return static_cast<T*>(_aligned_malloc(_count * sizeof(T), alignment));
 #else
-            return reinterpret_cast<T*>(aligned_alloc(alignment, _count * sizeof(T)));
+            return static_cast<T*>(aligned_alloc(alignment, _count * sizeof(T)));
 #endif
         }
 
         template<typename T>
-        void free(T* _ptr)
+        static void free(T* _ptr)
         {
 #ifdef _WIN32
             _aligned_free(_ptr);
@@ -779,5 +779,5 @@ namespace soa
     };
 
     template<typename MembersDesc, typename... Types>
-    using vector_std_alloc = soa::vector<MembersDesc, soa::default_allocator, Types...>;
+    using vector = soa::vector_base<MembersDesc, soa::std_allocator, Types...>;
 }
