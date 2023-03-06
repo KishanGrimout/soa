@@ -83,13 +83,14 @@ namespace soa
 
             reference operator*() const
             {
-                return apply([](auto... _obj) { return reference{ *(_obj)... }; }, m_ptr);
+                return convert<reference>(make_index_sequence<members_count>{});
+                //return apply([](auto... _obj) { return reference{ *(_obj)... }; }, m_ptr);
             }
 
             template<MembersDesc MemberIndex>
             const auto& value() const
             {
-                return *get<MemberIndex>(m_ptr);
+                return *get<static_cast<size_t>(MemberIndex)>(m_ptr);
             }
 
             const_iterator& operator++()
@@ -135,11 +136,18 @@ namespace soa
 
         protected:
             pointer m_ptr{};
+            //tuple<Types*...> m_ptr{};
 
             template<typename... Args>
             const_iterator(Args... _args)
                 : m_ptr{ make_tuple(_args...) }
             {
+            }
+
+            template<typename R, size_t... I>
+            R convert(index_sequence<I...>) const
+            {
+                return { (*get<I>(m_ptr))... };
             }
 
             friend class soa::vector_base<MembersDesc, Allocator, Types...>;
@@ -156,14 +164,15 @@ namespace soa
 
             iterator() = default;
 
-            reference_list operator*() const
+            reference operator*() const
             {
-                return apply([](auto... _obj) { return reference_list{ *const_cast<remove_const_t<decltype(_obj)>>(_obj)...}; }, const_iterator::m_ptr);
+                return convert<reference>(make_index_sequence<members_count>{});
             }
 
             template<MembersDesc MemberIndex>
             auto& value()
             {
+                //return const_cast<tuple_element_t<static_cast<size_t>(MemberIndex), pointer>&>(const_iterator::value<MemberIndex>());
                 return *const_cast<tuple_element_t<static_cast<size_t>(MemberIndex), pointer>>(get<static_cast<size_t>(MemberIndex)>(const_iterator::m_ptr));
             }
 
@@ -195,6 +204,12 @@ namespace soa
 
         private:
             using const_iterator::const_iterator;
+
+            template<typename R, size_t... I>
+            R convert(index_sequence<I...>) const
+            {
+                return { (*const_cast<tuple_element_t<I, pointer>>(get<I>(const_iterator::m_ptr)))... };
+            }
 
             friend class soa::vector_base<MembersDesc, Allocator, Types...>;
         };
@@ -265,6 +280,7 @@ namespace soa
             static constexpr array<size_t, sizeof...(Members)> ms_mapping{ static_cast<size_t>(Members)... };
 
             pointer m_ptr{};
+            //tuple<tuple_element_t<static_cast<size_t>(Members), value_list>*...> m_ptr{};
 
             template<typename... Args>
             partial_const_iterator(Args... _args)
@@ -289,6 +305,8 @@ namespace soa
         {
             using base_iterator = partial_const_iterator<Members...>;
 
+            //template<MembersDesc MemberIndex, size_t Index>
+            //using partial_const_iterator::getIndex;
             template<MembersDesc MemberIndex, size_t Index = 0>
             static constexpr size_t getIndex()
             {
@@ -307,11 +325,13 @@ namespace soa
 
             partial_ref_list<Members...> operator*() const
             {
-                return apply(
-                    [](auto... _obj) {
-                        return partial_ref_list<Members...>{ *(_obj)... };
-                    },
-                    base_iterator::m_ptr);
+                return apply([](auto... _obj) { return partial_ref_list<Members...>{ *(_obj)...}; }, partial_const_iterator::m_ptr);
+
+                //return apply(
+                //    [](auto... _obj) {
+                //        return partial_ref_list<Members...>{ *const_cast<remove_const_t<decltype(_obj)>(_obj)... };
+                //    },
+                //    base_iterator::m_ptr);
             }
 
             template<MembersDesc MemberIndex>
