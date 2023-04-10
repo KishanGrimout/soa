@@ -232,6 +232,14 @@ int main()
         [[maybe_unused]] const vector3& constItPos = constIt.value<Example::Position>();
     }
 
+    // Test compilation for partial_iterator
+    {
+        ExampleArray::partial_iterator<Example::Position, Example::Name> it = test.begin<Example::Position, Example::Name>();
+        *it;
+        static_assert(std::is_same<vector3&, decltype(it.value<Example::Position>())>::value, "partial_const_iterator::value() returns a const reference on the member");
+        [[maybe_unused]] vector3& itPos = it.value<Example::Position>();
+    }
+
     // And also partial iterators, working on a subset of members, to iterate only on the members you need
     {
         ExampleArray::partial_iterator<Example::Position, Example::Name> it = test.begin<Example::Position, Example::Name>();
@@ -241,27 +249,27 @@ int main()
         for (; it != end; ++it)
         {
             // When dereferencing an iterator, you get a tuple of the members you selected.
-            //ExampleArray::partial_ref_list<Example::Position, Example::Name> refIt = *it;
+            ExampleArray::partial_ref_list<Example::Position, Example::Name> refIt = *it;
 
             //// ReferenceList is a tuple, so can be accessed like a regular tuple.
-            //std::get<vector3&>(refIt).x = 1.f;
+            std::get<vector3&>(refIt).x = 1.f;
 
             //// Beware that the tuple indices are specific to that tuple, and you can't use the members description enum values.
-            //std::get<1>(refIt) = "new value";
+            std::get<1>(refIt) = "new value";
 
             //// But there are helper methods allowing to reuse the MembersDesc enum values and map to the correct tuple element.
-            //[[maybe_unused]] vector3& itPos = it.value<Example::Position>();
-            //[[maybe_unused]] std::string& itName = it.value<Example::Name>();
+            [[maybe_unused]] vector3& itPos = it.value<Example::Position>();
+            [[maybe_unused]] std::string& itName = it.value<Example::Name>();
         }
     }
 
-    //[[maybe_unused]] ExampleArray::partial_iterator<Example::Position, Example::Name> findItem = std::find_if(
-    //    test.begin<Example::Position, Example::Name>(),
-    //    test.end<Example::Position, Example::Name>(),
-    //    [](const ExampleArray::partial_ref_list<Example::Position, Example::Name>& _element) {
-    //        // Same remark here, the tuple elements are for the partial_ref_list, so you need to use appropriate parameter
-    //        return !std::get<std::string&>(_element).empty();
-    //    });
+    [[maybe_unused]] ExampleArray::partial_iterator<Example::Position, Example::Name> findItem = std::find_if(
+        test.begin<Example::Position, Example::Name>(),
+        test.end<Example::Position, Example::Name>(),
+        [](const ExampleArray::partial_ref_list<Example::Position, Example::Name>& _element) {
+            // Same remark here, the tuple elements are for the partial_ref_list, so you need to use appropriate parameter
+            return !std::get<std::string&>(_element).empty();
+        });
 
     // And... we are done!
     test.clear();
