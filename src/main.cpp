@@ -213,7 +213,7 @@ int main()
         *it;
         static_assert(std::is_same<vector3&, decltype(it.value<Example::Position>())>::value, "iterator::value() returns a reference on the member");
         [[maybe_unused]] vector3& itPos = it.value<Example::Position>();
-        assert(end - it == static_cast<ptrdiff_t>(test.size()));
+        assert(end - it == static_cast<std::ptrdiff_t>(test.size()));
     }
 
     // Const iterators
@@ -244,7 +244,7 @@ int main()
     {
         ExampleArray::partial_iterator<Example::Position, Example::Name> it = test.begin<Example::Position, Example::Name>();
         auto end = test.end<Example::Position, Example::Name>();
-        assert(end - it == static_cast<ptrdiff_t>(test.size()));
+        assert(end - it == static_cast<std::ptrdiff_t>(test.size()));
 
         for (; it != end; ++it)
         {
