@@ -50,14 +50,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IntDir>$(Platform)_clangcl\$(Configuration)\</IntDir>
-    <TargetName>$(ProjectName)_clangcl</TargetName>
-    <OutDir>$(SolutionDir)$(Platform)_clangcl\$(Configuration)\</OutDir>
+    <IntDir>tmp\$(Platform)_clangcl\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)</TargetName>
+    <OutDir>$(SolutionDir)output\$(Platform)_clangcl\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IntDir>$(Platform)_clangcl\$(Configuration)\</IntDir>
-    <TargetName>$(ProjectName)_clangcl</TargetName>
-    <OutDir>$(SolutionDir)$(Platform)_clangcl\$(Configuration)\</OutDir>
+    <IntDir>tmp\$(Platform)_clangcl\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)</TargetName>
+    <OutDir>$(SolutionDir)output\$(Platform)_clangcl\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
