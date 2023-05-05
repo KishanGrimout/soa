@@ -30,6 +30,8 @@ namespace soa
     template <size_t... Vals>
     using index_sequence = std::index_sequence<Vals...>;
 
+    using std::random_access_iterator_tag;
+
     using std::is_same_v;
 
     template <typename T>
@@ -78,7 +80,7 @@ namespace soa
         {
         public:
             using pointer = tuple<const Types*...>;
-            using iterator_category = std::random_access_iterator_tag;
+            using iterator_category = random_access_iterator_tag;
             using difference_type = ptrdiff_t;
             using reference = const_reference_list;
             using value_type = value_list;
@@ -157,7 +159,7 @@ namespace soa
         {
         public:
             using pointer = tuple<Types*...>;
-            using iterator_category = std::random_access_iterator_tag;
+            using iterator_category = random_access_iterator_tag;
             using difference_type = ptrdiff_t;
             using reference = reference_list;
             using value_type = value_list;
@@ -218,7 +220,7 @@ namespace soa
         {
         public:
             using pointer = tuple<const tuple_element_t<static_cast<size_t>(Members), value_list>*...>;
-            using iterator_category = std::random_access_iterator_tag;
+            using iterator_category = random_access_iterator_tag;
             using difference_type = ptrdiff_t;
             using reference = partial_const_ref_list<Members...>;
             using value_type = void;
@@ -321,7 +323,7 @@ namespace soa
 
         public:
             using pointer = tuple<tuple_element_t<static_cast<size_t>(Members), value_list>*...>;
-            using iterator_category = std::random_access_iterator_tag;
+            using iterator_category = random_access_iterator_tag;
             using difference_type = ptrdiff_t;
             using reference = partial_ref_list<Members...>;
             using value_type = void;
