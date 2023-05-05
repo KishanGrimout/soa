@@ -30,6 +30,8 @@ namespace soa
     template <size_t... Vals>
     using index_sequence = std::index_sequence<Vals...>;
 
+    using std::is_same_v;
+
     template <typename T>
     using decay_t = std::decay_t<T>;
 
@@ -485,9 +487,9 @@ namespace soa
             if constexpr (sizeof...(_args) == 1)
             {
                 if constexpr (
-                    std::is_same_v<decay_t<Args>..., reference_list> ||
-                    std::is_same_v<decay_t<Args>..., const_reference_list> ||
-                    std::is_same_v<decay_t<Args>..., value_list>)
+                    is_same_v<decay_t<Args>..., reference_list> ||
+                    is_same_v<decay_t<Args>..., const_reference_list> ||
+                    is_same_v<decay_t<Args>..., value_list>)
                 {
                     push_back_internal(std::forward<Args>(_args)..., make_index_sequence<members_count>{});
                 }
@@ -518,9 +520,9 @@ namespace soa
             if constexpr (sizeof...(_args) == 1)
             {
                 if constexpr (
-                    std::is_same_v<decay_t<Args>..., reference_list> ||
-                    std::is_same_v<decay_t<Args>..., const_reference_list> ||
-                    std::is_same_v<decay_t<Args>..., value_list>)
+                    is_same_v<decay_t<Args>..., reference_list> ||
+                    is_same_v<decay_t<Args>..., const_reference_list> ||
+                    is_same_v<decay_t<Args>..., value_list>)
                 {
                     resize_internal(_size, std::forward<Args>(_args)..., make_index_sequence<members_count>{});
                 }
@@ -541,9 +543,9 @@ namespace soa
             if constexpr (sizeof...(_args) == 1)
             {
                 if constexpr (
-                    std::is_same_v<decay_t<Args>..., reference_list> ||
-                    std::is_same_v<decay_t<Args>..., const_reference_list> ||
-                    std::is_same_v<decay_t<Args>..., value_list>)
+                    is_same_v<decay_t<Args>..., reference_list> ||
+                    is_same_v<decay_t<Args>..., const_reference_list> ||
+                    is_same_v<decay_t<Args>..., value_list>)
                 {
                     insert_internal(_pos, std::forward<Args>(_args)..., make_index_sequence<members_count>{});
                 }
