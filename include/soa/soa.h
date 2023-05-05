@@ -61,6 +61,7 @@ namespace soa
     class vector_base
     {
     public:
+        using size_type = size_t;
         using value_list = tuple<Types...>;
         using reference_list = tuple<Types&...>;
         using const_reference_list = tuple<const Types&...>;
@@ -384,12 +385,12 @@ namespace soa
 
         }
 
-        size_t size() const
+        size_type size() const
         {
             return get<0>(m_soa).size();
         }
 
-        size_t capacity() const
+        size_type capacity() const
         {
             return get<0>(m_soa).capacity();
         }
@@ -438,7 +439,7 @@ namespace soa
         template<MembersDesc... Members>
         partial_iterator<Members...> end()
         {
-            const size_t size{ this->size() };
+            const size_type size{ this->size() };
             return { get<static_cast<size_t>(Members)>(m_soa).data() + size... };
         }
 
@@ -451,7 +452,7 @@ namespace soa
         template<MembersDesc... Members>
         partial_const_iterator<Members...> end() const
         {
-            const size_t size{ this->size() };
+            const size_type size{ this->size() };
             return { get<static_cast<size_t>(Members)>(m_soa).data() + size... };
         }
 
@@ -464,11 +465,11 @@ namespace soa
         template<MembersDesc... Members>
         partial_const_iterator<Members...> cend() const
         {
-            const size_t size{ this->size() };
+            const size_type size{ this->size() };
             return { get<static_cast<size_t>(Members)>(m_soa).data() + size... };
         }
 
-        void reserve(size_t _capacity)
+        void reserve(size_type _capacity)
         {
             apply([_capacity](auto&&... _vec) { (_vec.reserve(_capacity), ...); }, m_soa);
         }
@@ -511,13 +512,13 @@ namespace soa
             apply([](auto&&... _vec) {	(_vec.pop_back(), ...); }, m_soa);
         }
 
-        void resize(size_t _size)
+        void resize(size_type _size)
         {
             apply([_size](auto&&... _vec) { (_vec.resize(_size), ...); }, m_soa);
         }
 
         template<typename... Args>
-        void resize(size_t _size, Args&&... _args)
+        void resize(size_type _size, Args&&... _args)
         {
             if constexpr (sizeof...(_args) == 1)
             {
@@ -540,7 +541,7 @@ namespace soa
         }
 
         template<typename... Args>
-        void insert(size_t _pos, Args&&... _args)
+        void insert(size_type _pos, Args&&... _args)
         {
             if constexpr (sizeof...(_args) == 1)
             {
@@ -562,39 +563,39 @@ namespace soa
             }
         }
 
-        size_t erase(size_t _pos)
+        size_type erase(size_type _pos)
         {
             return erase(_pos, _pos + 1);
         }
 
-        size_t erase(size_t _startPos, size_t _endPos)
+        size_type erase(size_type _startPos, size_type _endPos)
         {
             return erase_internal(_startPos, _endPos, make_index_sequence<members_count>{});
         }
 
         template<MembersDesc I>
-        auto& at(size_t _index)
+        auto& at(size_type _index)
         {
             return get<static_cast<size_t>(I)>(m_soa).at(_index);
         }
 
         template<MembersDesc I>
-        const auto& at(size_t _index) const
+        const auto& at(size_type _index) const
         {
             return get<static_cast<size_t>(I)>(m_soa).at(_index);
         }
 
-        value_list value_at(size_t _index) const
+        value_list value_at(size_type _index) const
         {
             return at_internal<value_list>(_index, make_index_sequence<members_count>{});
         }
 
-        reference_list ref_at(size_t _index)
+        reference_list ref_at(size_type _index)
         {
             return at_internal<reference_list>(_index, make_index_sequence<members_count>{});
         }
 
-        const_reference_list ref_at(size_t _index) const
+        const_reference_list ref_at(size_type _index) const
         {
             return at_internal<const_reference_list>(_index, make_index_sequence<members_count>{});
         }
@@ -639,14 +640,14 @@ namespace soa
         template<size_t... I>
         iterator end_internal(index_sequence<I...>)
         {
-            const size_t size{ this->size() };
+            const size_type size{ this->size() };
             return { get<static_cast<size_t>(I)>(m_soa).data() + size... };
         }
 
         template<size_t... I>
         const_iterator end_internal(index_sequence<I...>) const
         {
-            const size_t size{ this->size() };
+            const size_type size{ this->size() };
             return { get<static_cast<size_t>(I)>(m_soa).data() + size... };
         }
 
@@ -657,32 +658,32 @@ namespace soa
         }
 
         template<typename Tuple, size_t... I>
-        void resize_internal(size_t _size, Tuple&& _args, index_sequence<I...>)
+        void resize_internal(size_type _size, Tuple&& _args, index_sequence<I...>)
         {
             (get<I>(m_soa).resize(_size, get<I>(std::forward<Tuple>(_args))), ...);
         }
 
         template<typename Tuple, size_t... I>
-        void insert_internal(size_t _pos, Tuple&& _args, index_sequence<I...>)
+        void insert_internal(size_type _pos, Tuple&& _args, index_sequence<I...>)
         {
             (get<I>(m_soa).insert(get<I>(m_soa).begin() + static_cast<ptrdiff_t>(_pos), get<I>(std::forward<Tuple>(_args))), ...);
         }
 
         template<size_t... I>
-        size_t erase_internal(size_t _startPos, size_t _endPos, index_sequence<I...>)
+        size_type erase_internal(size_type _startPos, size_type _endPos, index_sequence<I...>)
         {
             (get<I>(m_soa).erase(get<I>(m_soa).begin() + static_cast<ptrdiff_t>(_startPos), get<I>(m_soa).begin() + static_cast<ptrdiff_t>(_endPos)), ...);
             return _startPos;
         }
 
         template<typename ReturnType, size_t... I>
-        ReturnType at_internal(size_t _index, index_sequence<I...>)
+        ReturnType at_internal(size_type _index, index_sequence<I...>)
         {
             return forward_as_tuple(get<I>(m_soa).at(_index) ...);
         }
 
         template<typename ReturnType, size_t... I>
-        ReturnType at_internal(size_t _index, index_sequence<I...>) const
+        ReturnType at_internal(size_type _index, index_sequence<I...>) const
         {
             return forward_as_tuple(get<I>(m_soa).at(_index) ...);
         }
