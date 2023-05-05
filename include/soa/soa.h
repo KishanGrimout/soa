@@ -378,11 +378,32 @@ namespace soa
         };
 
         vector_base() = default;
+        vector_base(const vector_base&) = default;
+        vector_base(vector_base&&) = default;
+        ~vector_base() = default;
+        vector_base& operator=(const vector_base&) = default;
+        vector_base& operator=(vector_base&&) = default;
 
         explicit vector_base(Allocator _allocator)
             : m_soa{ container<Types, allocator_wrapper<Types>>{ std::move(_allocator) }... }
         {
+        }
 
+        explicit vector_base(size_type _count, Allocator _allocator = Allocator())
+            : m_soa{ container<Types, allocator_wrapper<Types>>{ _count, std::move(_allocator) }... }
+        {
+        }
+
+        template<typename... Args>
+        vector_base(size_type _count, Args&&... _args)
+        {
+            resize(_count, _args...);
+        }
+
+        vector_base(size_type _count, const const_reference_list& _value, Allocator _allocator = Allocator())
+            : vector_base{ _allocator }
+        {
+            resize(_count, _value);
         }
 
         size_type size() const

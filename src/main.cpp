@@ -76,6 +76,7 @@ class ActualAllocator : public AllocatorInterface
 {
     void* allocate(size_t _size, size_t /*_align*/) override
     {
+        m_allocated += _size;
         return new char[_size];
     }
 
@@ -83,6 +84,9 @@ class ActualAllocator : public AllocatorInterface
     {
         delete[] static_cast<char*>(_ptr);
     }
+
+public:
+    size_t m_allocated{};
 };
 
 // You can also create one with a custom allocator.
@@ -113,11 +117,22 @@ using ExampleCustomAllocator = soa::vector_base<Example, PolymorphicAllocator, v
 
 int main()
 {
-    // Create an empty SOA
+    // Create an empty SOA with default construction
     ExampleArray test;
 
-    ActualAllocator allocator;
-    ExampleCustomAllocator testCustom{ allocator };
+    // SOA vector with 10 elements, init value and no custom allocator
+    {
+        ExampleArray testSized{ 10, vector3{ 0.f, 0.f, 0.f }, 12, 13.f, "init", Checker{} };
+        assert(testSized.size() == 10);
+    }
+    
+    // SOA vector with 10 elements, init value and custom allocator
+    {
+        ActualAllocator allocator;
+        ExampleCustomAllocator testCustom{ 10, { vector3{ 0.f, 0.f, 0.f }, 12, 13.f, std::string{ "init" }, Checker{} }, allocator };
+        assert(testCustom.size() == 10);
+        assert(allocator.m_allocated > 0);
+    }
 
     // Interface is similar to std::vector
     size_t size = test.size();
@@ -126,7 +141,7 @@ int main()
     bool empty = test.empty();
     assert(empty);
 
-    // All operations will apply to all the vectors
+    // All operations will apply to all the individual vectors
     test.reserve(10);
     size_t capacity = test.capacity();
     assert(capacity == 10);
